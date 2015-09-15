@@ -2,10 +2,12 @@ package org.jboss.da.listings.impl.service;
 
 import java.util.List;
 import java.util.Optional;
-import javax.ejb.Stateless;
-import javax.inject.Inject;
-import org.jboss.da.communication.model.GAV;
 
+import javax.ejb.Stateless;
+import javax.faces.bean.ApplicationScoped;
+import javax.inject.Inject;
+
+import org.jboss.da.communication.model.GAV;
 import org.jboss.da.listings.api.dao.ArtifactDAO;
 import org.jboss.da.listings.api.dao.BlackArtifactDAO;
 import org.jboss.da.listings.api.dao.WhiteArtifactDAO;
@@ -18,7 +20,7 @@ import org.jboss.da.listings.api.service.BlackArtifactService;
  * @author Jozef Mrazek <jmrazek@redhat.com>
  *
  */
-@Stateless
+@ApplicationScoped
 public class BlackArtifactServiceImpl extends ArtifactServiceImpl<BlackArtifact> implements
         BlackArtifactService {
 
