@@ -2,18 +2,25 @@ package org.jboss.da.test.client.rest.listings;
 
 import static org.apache.commons.io.FileUtils.readFileToString;
 import static org.apache.http.entity.ContentType.APPLICATION_JSON;
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 import org.apache.commons.io.FileUtils;
+import org.jboss.da.communication.model.GAV;
 import org.jboss.da.test.client.AbstractRestApiTest;
 import org.jboss.resteasy.client.ClientRequest;
 import org.jboss.resteasy.client.ClientResponse;
+import org.jboss.resteasy.util.GenericType;
+import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 
 import javax.ws.rs.core.MediaType;
 
 import java.io.File;
+import java.util.List;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class RestApiListingsTest extends AbstractRestApiTest {
 
@@ -32,7 +39,46 @@ public class RestApiListingsTest extends AbstractRestApiTest {
     private static String PATH_WHITE_LISTINGS_GAV = "/listings/whitelist/gav";
 
     private static String PATH_BLACK_LISTINGS_GAV = "/listings/blacklist/gav";
+    
+    private static final ObjectMapper mapper = new ObjectMapper();
+    
+    @Before
+    public void dropTables() throws Exception{
+        List<GAV> whitelistedArtifacts = getAllArtifactsFromList(PATH_WHITE_LIST);
+        whitelistedArtifacts.forEach(gav -> removeGavFromList(PATH_WHITE_LIST, gav));
+        
+        List<GAV> blacklistedArtifacts = getAllArtifactsFromList(PATH_BLACK_LIST);
+        blacklistedArtifacts.forEach(gav -> removeGavFromList(PATH_WHITE_LIST, gav));
+        
+    }
+    
+    private void removeGavFromList(String listUrl, GAV gav) {
+        try {
+            createClientRequest(listUrl, mapper.writeValueAsString(gav));
+        } catch (JsonProcessingException e) {
+            fail("Failed to remove GAV from the list using URL " + listUrl);
+        }
+    }
+    
 
+    private List<GAV> getAllArtifactsFromList(String listUrl) throws Exception {
+        return processGetRequest(
+                new GenericType<List<GAV>>(){}, restApiURL + listUrl);
+    }
+    
+    private <T> T processGetRequest(GenericType<T> type, String url) throws Exception {
+        ClientRequest request = new ClientRequest(url);
+        request.accept(MediaType.APPLICATION_JSON);
+
+        ClientResponse<T> response = request.get(type);
+
+        if (response.getStatus() != 200)
+            fail("Failed to get entity via REST API");
+
+        return response.getEntity();
+    }
+
+    
     @Ignore
     @Test
     public void testAddWhiteArtifact() throws Exception {
